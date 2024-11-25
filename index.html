@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Construtor de Páginas - Cotações Aéreas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        h2 {
+            text-decoration: underline;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .page {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, textarea, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        img.preview {
+            display: block;
+            max-width: 100%;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Construtor de Páginas - Cotações Aéreas</h1>
+
+    <!-- Primeira página fixa -->
+    <div id="page1" class="page">
+        <h2>Informações Principais</h2>
+        <div class="form-group">
+            <label>Nome:</label>
+            <input type="text" id="nome" required>
+        </div>
+        <div class="form-group">
+            <label>Origem:</label>
+            <input type="text" id="origem" required>
+        </div>
+        <div class="form-group">
+            <label>Destino:</label>
+            <input type="text" id="destino" required>
+        </div>
+        <div class="form-group">
+            <label>Descrição:</label>
+            <textarea id="descricao" rows="4" required></textarea>
+        </div>
+    </div>
+
+    <!-- Segunda página fixa -->
+    <div id="page2" class="page">
+        <h2>Resumo da Pesquisa</h2>
+        <div class="form-group">
+            <label>Texto:</label>
+            <textarea id="resumo" rows="5" maxlength="500" placeholder="As melhores opções de emitir passagens foram nos dias X com a cia Y..."></textarea>
+        </div>
+    </div>
+
+    <!-- Container para páginas dinâmicas -->
+    <div id="dynamic-pages"></div>
+
+    <!-- Botões de controle -->
+    <button onclick="addPage()">Nova Página</button>
+    <button onclick="generatePDF()">Gerar PDF</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        let pageCount = 1;
+
+        function addPage() {
+            pageCount++;
+            const container = document.getElementById('dynamic-pages');
+
+            const newPage = document.createElement('div');
+            newPage.className = 'page';
+            newPage.id = `page${pageCount}`;
+
+            newPage.innerHTML = `
+                <h2>Opção ${pageCount - 2}</h2>
+                <div class="form-group">
+                    <label>Selecionar Cia Aérea:</label>
+                    <select class="cia">
+                        <option value="" selected disabled>Selecione...</option>
+                        <option value="LATAM">LATAM</option>
+                        <option value="Gol">Gol</option>
+                        <option value="Azul">Azul</option>
+                        <option value="Outras">Outras</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Upload de Imagem:</label>
+                    <input type="file" class="image" accept="image/*" onchange="previewImage(this)">
+                    <img class="preview" style="display: none;">
+                </div>
+            `;
+
+            container.appendChild(newPage);
+        }
+
+        function previewImage(input) {
+            const preview = input.nextElementSibling;
+            const file = input.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4',
+                compress: true
+            });
+
+            const margins = { top: 30, left: 30, right: 20, bottom: 20 };
+
+            // Primeira página
+            pdf.setFontSize(14);
+            pdf.text('Informações Principais', margins.left, margins.top);
+            pdf.text(`Nome: ${document.getElementById('nome').value}`, margins.left, margins.top + 10);
+            pdf.text(`Origem: ${document.getElementById('origem').value}`, margins.left, margins.top + 20);
+            pdf.text(`Destino: ${document.getElementById('destino').value}`, margins.left, margins.top + 30);
+            pdf.text(`Descrição: ${document.getElementById('descricao').value}`, margins.left, margins.top + 40);
+
+            // Segunda página
+            pdf.addPage();
+            pdf.text('Resumo da Pesquisa', margins.left, margins.top);
+            pdf.text(document.getElementById('resumo').value, margins.left, margins.top + 10, {
+                maxWidth: pdf.internal.pageSize.width - margins.left - margins.right
+            });
+
+            // Páginas dinâmicas
+            const dynamicPages = document.getElementById('dynamic-pages').children;
+            for (let i = 0; i < dynamicPages.length; i++) {
+                const page = dynamicPages[i];
+                const title = page.querySelector('h2').innerText;
+                const cia = page.querySelector('.cia').value;
+                const img = page.querySelector('.preview').src;
+
+                pdf.addPage();
+                pdf.text(title, margins.left, margins.top);
+
+                if (cia) {
+                    pdf.text(`Cia Aérea: ${cia}`, margins.left, margins.top + 10);
+                }
+
+                if (img) {
+                    pdf.addImage(img, 'JPEG', margins.left, margins.top + 20, 200, 112);
+                }
+            }
+
+            pdf.save('cotacoes.pdf');
+        }
+    </script>
+</body>
+
+</html>
