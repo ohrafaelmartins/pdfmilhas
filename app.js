@@ -91,10 +91,20 @@ $(document).ready(function () {
             pdf.text(`Companhia Aérea: ${companhia}`, 20, 30);
             pdf.text(`Tipo de Pagamento: ${pagamento}`, 20, 40);
 
-            // Adiciona Imagem
+            // Adiciona Imagem com Validação
             if (imagemInput) {
+                const isValid = validateImage(imagemInput);
+                if (!isValid) continue;
+
                 const imgData = await readImageAsDataURL(imagemInput);
-                pdf.addImage(imgData, "JPEG", 20, 50, 170, 100); // Ajustar conforme necessário
+
+                // Define espaço máximo para a imagem
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const maxWidth = pageWidth - 40; // Margem ABNT
+                const maxHeight = pageHeight - 60; // Margem ABNT
+
+                pdf.addImage(imgData, "JPEG", 20, 50, maxWidth, maxHeight - 50, undefined, 'FAST');
             }
         }
 
@@ -116,5 +126,22 @@ $(document).ready(function () {
             reader.readAsDataURL(file);
         });
     }
+
+    // Valida Imagem
+    function validateImage(file) {
+        const maxSize = 1.6 * 1024 * 1024; // 1,6 MB
+        const validFormats = ["image/jpeg", "image/png"];
+
+        if (!validFormats.includes(file.type)) {
+            alert("Formato de imagem inválido! Apenas JPEG e PNG são aceitos.");
+            return false;
+        }
+        if (file.size > maxSize) {
+            alert("Imagem muito grande! O tamanho máximo permitido é 1,6 MB.");
+            return false;
+        }
+        return true;
+    }
+
 
 });
