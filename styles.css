@@ -1,0 +1,23 @@
+/* Estilos personalizados para o gerador de PDF */
+body {
+    background-color: #f4f4f4;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.dynamic-page {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.dynamic-page:hover {
+    background-color: #f0f0f0;
+}
