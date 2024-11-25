@@ -98,7 +98,6 @@
 <body>
     <h1>Construtor de Páginas - Cotações Aéreas</h1>
 
-    <!-- Primeira página fixa -->
     <div id="page1" class="page">
         <h2>Informações Principais</h2>
         <div class="form-group">
@@ -119,7 +118,6 @@
         </div>
     </div>
 
-    <!-- Segunda página fixa -->
     <div id="page2" class="page">
         <h2>Resumo da Pesquisa</h2>
         <div class="form-group">
@@ -128,10 +126,8 @@
         </div>
     </div>
 
-    <!-- Container para páginas dinâmicas -->
     <div id="dynamic-pages"></div>
 
-    <!-- Botões de controle -->
     <button onclick="addPage()">Nova Página</button>
     <button onclick="generatePDF()">Gerar PDF</button>
 
@@ -188,8 +184,7 @@
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'mm',
-                format: 'a4',
-                compress: true
+                format: 'a4'
             });
 
             const margins = { top: 30, left: 30, right: 20, bottom: 20 };
@@ -225,7 +220,18 @@
                 }
 
                 if (img) {
-                    pdf.addImage(img, 'JPEG', margins.left, margins.top + 20, 200, 112);
+                    const image = new Image();
+                    image.src = img;
+
+                    await new Promise(resolve => {
+                        image.onload = () => {
+                            const imgWidth = pdf.internal.pageSize.width - margins.left - margins.right;
+                            const imgHeight = (image.height / image.width) * imgWidth;
+
+                            pdf.addImage(img, 'JPEG', margins.left, margins.top + 20, imgWidth, imgHeight);
+                            resolve();
+                        };
+                    });
                 }
             }
 
