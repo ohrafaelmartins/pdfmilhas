@@ -1,257 +1,62 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Construtor de Páginas - Cotações Aéreas</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-
-        h1, h2 {
-            text-align: center;
-        }
-
-        h2 {
-            text-decoration: underline;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .page {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-            background-color: #fff;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input, textarea, select, button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        textarea {
-            resize: none;
-        }
-
-        button {
-            background-color: #007BFF;
-            color: white;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            margin-bottom: 10px;
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            padding: 15px 25px;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        img.preview {
-            display: block;
-            max-width: 100%;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            h2 {
-                font-size: 1rem;
-            }
-
-            button {
-                padding: 8px;
-                font-size: 0.9rem;
-            }
-
-            .form-group input, .form-group textarea, .form-group select {
-                font-size: 0.9rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de PDF</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 </head>
-
 <body>
-    <h1>Construtor de Páginas - Cotações Aéreas</h1>
+<div class="container my-4">
+  <h1 class="mb-4">Gerador de PDF</h1>
 
-    <div id="page1" class="page">
-        <h2>Informações Principais</h2>
-        <div class="form-group">
-            <label>Nome:</label>
-            <input type="text" id="nome" required>
-        </div>
-        <div class="form-group">
-            <label>Origem:</label>
-            <input type="text" id="origem" required>
-        </div>
-        <div class="form-group">
-            <label>Destino:</label>
-            <input type="text" id="destino" required>
-        </div>
-        <div class="form-group">
-            <label>Descrição:</label>
-            <textarea id="descricao" rows="4" required></textarea>
-        </div>
+  <!-- Primeira Página -->
+  <form id="page1Form">
+    <h3>Informações da Primeira Página</h3>
+    <div class="mb-3">
+      <label for="nomeCliente" class="form-label">Nome do Cliente</label>
+      <input type="text" id="nomeCliente" class="form-control" placeholder="Digite o nome do cliente" required>
     </div>
-
-    <div id="page2" class="page">
-        <h2>Resumo da Pesquisa</h2>
-        <div class="form-group">
-            <label>Texto:</label>
-            <textarea id="resumo" rows="5" maxlength="500" placeholder="As melhores opções de emitir passagens foram nos dias X com a cia Y..."></textarea>
-        </div>
+    <div class="mb-3">
+      <label for="formatoPDF" class="form-label">Formato do PDF</label>
+      <select id="formatoPDF" class="form-select" required>
+        <option value="portrait">Vertical</option>
+        <option value="landscape">Horizontal</option>
+      </select>
     </div>
+    <div class="mb-3">
+      <label for="origem" class="form-label">Origem</label>
+      <select id="origem" class="form-select" required></select>
+    </div>
+    <div class="mb-3">
+      <label for="destino" class="form-label">Destino</label>
+      <select id="destino" class="form-select" required></select>
+    </div>
+  </form>
 
-    <div id="dynamic-pages"></div>
+  <!-- Segunda Página -->
+  <form id="page2Form" class="mt-4">
+    <h3>Informações da Segunda Página</h3>
+    <div class="mb-3">
+      <label for="resumo" class="form-label">Resumo</label>
+      <textarea id="resumo" class="form-control" maxlength="500" rows="4" placeholder="Digite um resumo (máximo 500 caracteres)"></textarea>
+    </div>
+  </form>
 
-    <button onclick="generatePDF()">Gerar PDF</button>
+  <!-- Páginas Dinâmicas -->
+  <div id="dynamicPages" class="mt-4">
+    <h3>Páginas Dinâmicas</h3>
+  </div>
+  <button id="addPage" class="btn btn-secondary mt-3">Nova Página</button>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-    <script>
-        let pageCount = 1;
+  <!-- Botões -->
+  <div class="mt-4">
+    <button id="generatePDF" class="btn btn-primary">Gerar PDF</button>
+  </div>
+</div>
 
-        function addPage() {
-            pageCount++;
-            const container = document.getElementById('dynamic-pages');
-
-            const newPage = document.createElement('div');
-            newPage.className = 'page';
-            newPage.id = `page${pageCount}`;
-
-            newPage.innerHTML = `
-                <h2>Opção ${pageCount - 2}</h2>
-                <div class="form-group">
-                    <label>Selecionar Cia Aérea:</label>
-                    <select class="cia">
-                        <option value="" selected disabled>Selecione...</option>
-                        <option value="LATAM">LATAM</option>
-                        <option value="Gol">Gol</option>
-                        <option value="Azul">Azul</option>
-                        <option value="Outras">Outras</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Upload de Imagem:</label>
-                    <input type="file" class="image" accept="image/*" onchange="previewImage(this)">
-                    <img class="preview" style="display: none;">
-                </div>
-            `;
-
-            container.appendChild(newPage);
-        }
-
-        function previewImage(input) {
-            const preview = input.nextElementSibling;
-            const file = input.files[0];
-
-            // Limitar tamanho de imagem a 1MB
-            if (file && file.size <= 1048576) { // 1MB = 1048576 bytes
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                alert("A imagem não pode exceder 1MB.");
-                input.value = '';  // Limpa o campo de arquivo
-            }
-        }
-
-        async function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF({
-                orientation: 'landscape',
-                unit: 'mm',
-                format: 'a4'
-            });
-
-            const margins = { top: 30, left: 30, right: 20, bottom: 20 };
-
-            // Primeira página
-            pdf.setFontSize(14);
-            pdf.text('Informações Principais', margins.left, margins.top);
-            pdf.text(`Nome: ${document.getElementById('nome').value}`, margins.left, margins.top + 10);
-            pdf.text(`Origem: ${document.getElementById('origem').value}`, margins.left, margins.top + 20);
-            pdf.text(`Destino: ${document.getElementById('destino').value}`, margins.left, margins.top + 30);
-            pdf.text(`Descrição: ${document.getElementById('descricao').value}`, margins.left, margins.top + 40);
-
-            // Segunda página
-            pdf.addPage();
-            pdf.text('Resumo da Pesquisa', margins.left, margins.top);
-            pdf.text(document.getElementById('resumo').value, margins.left, margins.top + 10, {
-                maxWidth: pdf.internal.pageSize.width - margins.left - margins.right
-            });
-
-            // Páginas dinâmicas
-            const dynamicPages = document.getElementById('dynamic-pages').children;
-            for (let i = 0; i < dynamicPages.length; i++) {
-                const page = dynamicPages[i];
-                const title = page.querySelector('h2').innerText;
-                const cia = page.querySelector('.cia').value;
-                const img = page.querySelector('.preview').src;
-
-                pdf.addPage();
-                pdf.text(title, margins.left, margins.top);
-
-                if (cia) {
-                    pdf.text(`Cia Aérea: ${cia}`, margins.left, margins.top + 10);
-                }
-
-                if (img) {
-                    const image = new Image();
-                    image.src = img;
-
-                    await new Promise(resolve => {
-                        image.onload = () => {
-                            const imgWidth = pdf.internal.pageSize.width - margins.left - margins.right;
-                            const imgHeight = (image.height / image.width) * imgWidth;
-
-                            pdf.addImage(img, 'JPEG', margins.left, margins.top + 20, imgWidth, imgHeight);
-                            resolve();
-                        };
-                    });
-                }
-            }
-
-            const pdfBlob = pdf.output('bloburl');
-            window.open(pdfBlob, '_blank');
-        }
-    </script>
+<script src="app.js"></script>
 </body>
-
 </html>
