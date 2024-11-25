@@ -1,25 +1,55 @@
 $(document).ready(function () {
     const { jsPDF } = window.jspdf;
 
-    const codigosIATA = [
-        "ATL", "PEK", "LHR", "HND", "ORD", "DXB", "CDG", "DFW", "CAN", "JFK",
-        "AMS", "PVG", "FRA", "IST", "SIN", "ICN", "BKK", "HKG", "DEL", "SYD",
-        "LAX", "MIA", "GRU", "EZE", "LIM", "SCL", "BOG", "MEX", "YYZ", "YVR",
-        "MUC", "MAD", "VIE", "ZRH", "CPH", "ARN", "HEL", "OSL", "BRU", "MXP",
-        "FCO", "NAP", "BCN", "MLA", "ATH", "OTP", "PRG", "BUD", "LIS", "DUB",
-        "MNL", "KUL", "CGK", "BNE", "AKL", "DOH", "JNB", "CAI", "LOS", "ADD",
-        "NRT", "KIX", "CTS", "ITM", "OKA", "TPE", "PUS", "ICN", "FUK", "HGH",
-    ];
+    function parseCSV(csvText) {
+        const lines = csvText.split('\n');
+        return lines.map(line => {
+            const regex = /(".*?"|[^",]+)(?=\s*,|\s*$)/g;
+            return line.match(regex)?.map(field =>
+                field.replace(/^"|"$/g, '').trim()
+            );
+        }).filter(row => row && row.length > 2);
+    }
 
-    // Adiciona os códigos IATA ao select
-    const addOptions = (selector) => {
-        codigosIATA.forEach((code) => {
-            $(selector).append(`<option value="${code}">${code}</option>`);
-        });
-    };
+    // Fetch IATA codes from GitHub
+    async function fetchIATACodes() {
+        try {
+            const response = await fetch('https://raw.githubusercontent.com/ip2location/ip2location-iata-icao/master/iata-icao.csv');
+            const data = await response.text();
+            const parsedData = parseCSV(data);
 
-    addOptions("#origem");
-    addOptions("#destino");
+            const codigosIATA = parsedData
+                .map(columns => ({
+                    code: columns[2] || '',
+                    country: columns[0] || '',
+                    name: columns[4] || ''
+                }))
+                .filter(airport => airport.code);
+
+            // Adiciona os códigos IATA ao select com nomes
+            const addOptions = (selector) => {
+                codigosIATA.forEach((airport) => {
+                    const displayText = airport.code ?
+                        `${airport.code} - ${airport.name} (${airport.country})` :
+                        '';
+                    if (displayText) {
+                        $(selector).append(`<option value="${airport.code}">${displayText}</option>`);
+                    }
+                });
+            };
+
+            addOptions("#origem");
+            addOptions("#destino");
+        } catch (error) {
+            console.error('Erro ao carregar códigos IATA:', error);
+            alert('Não foi possível carregar os códigos IATA. Verifique sua conexão.');
+        }
+    }
+
+
+
+    // Chama a função para carregar códigos IATA
+    fetchIATACodes();
 
     let pageIndex = 0;
 
@@ -61,6 +91,7 @@ $(document).ready(function () {
         const origem = $("#origem").val();
         const destino = $("#destino").val();
         const resumo = $("#resumo").val();
+
         const pdf = new jsPDF({
             orientation: formatoPDF,
             unit: "mm",
@@ -142,6 +173,4 @@ $(document).ready(function () {
         }
         return true;
     }
-
-
 });
