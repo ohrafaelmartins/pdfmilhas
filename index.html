@@ -8,8 +8,8 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 0;
+            padding: 0;
             background-color: #f9f9f9;
         }
 
@@ -61,6 +61,12 @@
             border: none;
             cursor: pointer;
             margin-bottom: 10px;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            padding: 15px 25px;
         }
 
         button:hover {
@@ -89,6 +95,10 @@
 
             button {
                 padding: 8px;
+                font-size: 0.9rem;
+            }
+
+            .form-group input, .form-group textarea, .form-group select {
                 font-size: 0.9rem;
             }
         }
@@ -128,7 +138,6 @@
 
     <div id="dynamic-pages"></div>
 
-    <button onclick="addPage()">Nova Página</button>
     <button onclick="generatePDF()">Gerar PDF</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
@@ -169,13 +178,17 @@
             const preview = input.nextElementSibling;
             const file = input.files[0];
 
-            if (file) {
+            // Limitar tamanho de imagem a 1MB
+            if (file && file.size <= 1048576) { // 1MB = 1048576 bytes
                 const reader = new FileReader();
                 reader.onload = function (e) {
                     preview.src = e.target.result;
                     preview.style.display = 'block';
                 };
                 reader.readAsDataURL(file);
+            } else {
+                alert("A imagem não pode exceder 1MB.");
+                input.value = '';  // Limpa o campo de arquivo
             }
         }
 
