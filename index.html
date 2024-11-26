@@ -1,63 +1,361 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de PDF</title>
-  <link href="styles.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gerador de PDF Dinâmico</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .btn-custom-toggle {
+            position: relative;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .btn-custom-label {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            transition: all 0.3s;
+        }
+        .btn-custom-toggle:checked + .btn-custom-label {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .preview-image {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px;
+            object-fit: contain;
+        }
+        #image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .image-info {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
-<div class="container my-4">
-  <h1 class="mb-4">Gerador de PDF</h1>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">Gerador de PDF Dinâmico</h2>
+            </div>
+            <div class="card-body" id="page-container">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h4>Companhias Aéreas</h4>
+                        <div class="d-flex flex-wrap" id="airline-group">
+                            <input type="checkbox" class="btn-custom-toggle" id="azul" name="airline">
+                            <label class="btn-custom-label" for="azul">Azul</label>
+                            
+                            <input type="checkbox" class="btn-custom-toggle" id="gol" name="airline">
+                            <label class="btn-custom-label" for="gol">Gol</label>
+                            
+                            <input type="checkbox" class="btn-custom-toggle" id="latam" name="airline">
+                            <label class="btn-custom-label" for="latam">Latam</label>
+                            
+                            <input type="checkbox" class="btn-custom-toggle" id="tap" name="airline">
+                            <label class="btn-custom-label" for="tap">TAP</label>
+                            
+                            <input type="checkbox" class="btn-custom-toggle" id="iberia" name="airline">
+                            <label class="btn-custom-label" for="iberia">Iberia</label>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <h4>Tipo de Pagamento</h4>
+                        <div class="d-flex flex-wrap" id="payment-group">
+                            <input type="checkbox" class="btn-custom-toggle" id="pontos" name="payment">
+                            <label class="btn-custom-label" for="pontos">Pontos</label>
+                            
+                            <input type="checkbox" class="btn-custom-toggle" id="dinheiro" name="payment">
+                            <label class="btn-custom-label" for="dinheiro">Dinheiro</label>
+                        </div>
+                    </div>
+                </div>
 
-  <!-- Primeira Página -->
-  <form id="page1Form">
-    <h3>Informações da Primeira Página</h3>
-    <div class="mb-3">
-      <label for="nomeCliente" class="form-label">Nome do Cliente</label>
-      <input type="text" id="nomeCliente" class="form-control" placeholder="Digite o nome do cliente" required>
-    </div>
-    <div class="mb-3">
-      <label for="formatoPDF" class="form-label">Formato do PDF</label>
-      <select id="formatoPDF" class="form-select" required>
-        <option value="portrait">Vertical</option>
-        <option value="landscape">Horizontal</option>
-      </select>
-    </div>
-    <div class="mb-3">
-      <label for="origem" class="form-label">Origem</label>
-      <select id="origem" class="form-select" required></select>
-    </div>
-    <div class="mb-3">
-      <label for="destino" class="form-label">Destino</label>
-      <select id="destino" class="form-select" required></select>
-    </div>
-  </form>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h4>Descrição</h4>
+                        <textarea 
+                            id="description" 
+                            class="form-control" 
+                            maxlength="100" 
+                            rows="3" 
+                            placeholder="Descrição (máximo 100 caracteres)"
+                        ></textarea>
+                        <small class="form-text text-muted" id="char-count">0 / 100 caracteres</small>
+                    </div>
+                </div>
 
-  <!-- Segunda Página -->
-  <form id="page2Form" class="mt-4">
-    <h3>Informações da Segunda Página</h3>
-    <div class="mb-3">
-      <label for="resumo" class="form-label">Resumo</label>
-      <textarea id="resumo" class="form-control" maxlength="500" rows="4" placeholder="Digite um resumo (máximo 500 caracteres)"></textarea>
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <h4>Anexar Imagens</h4>
+                        <div class="input-group">
+                            <input 
+                                type="file" 
+                                class="form-control" 
+                                id="image-upload" 
+                                accept="image/*" 
+                                multiple 
+                                max="2"
+                            >
+                        </div>
+                        <div id="image-preview" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <button id="new-page-btn" class="btn btn-secondary">
+                        Nova Página
+                    </button>
+                    <button id="generate-pdf-btn" class="btn btn-primary">
+                        Gerar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <div id="pages-list" class="list-group"></div>
+        </div>
     </div>
-  </form>
 
-  <!-- Páginas Dinâmicas -->
-  <div id="dynamicPages" class="mt-4">
-    <h3>Páginas Dinâmicas</h3>
-  </div>
-  <button id="addPage" class="btn btn-secondary mt-3">Nova Página</button>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-  <!-- Botões -->
-  <div class="mt-4">
-    <button id="generatePDF" class="btn btn-primary">Gerar PDF</button>
-  </div>
-</div>
+    <script>
+        const { jsPDF } = window.jspdf;
+        const MAX_IMAGES = 2;
+        const pages = [];
 
-<script src="app.js"></script>
+        // Elementos DOM
+        const newPageBtn = document.getElementById('new-page-btn');
+        const generatePdfBtn = document.getElementById('generate-pdf-btn');
+        const imageUpload = document.getElementById('image-upload');
+        const imagePreview = document.getElementById('image-preview');
+        const descriptionTextarea = document.getElementById('description');
+        const charCountSpan = document.getElementById('char-count');
+        const pagesList = document.getElementById('pages-list');
+
+        // Contador de caracteres
+        descriptionTextarea.addEventListener('input', function() {
+            const currentLength = this.value.length;
+            charCountSpan.textContent = `${currentLength} / 100 caracteres`;
+            charCountSpan.classList.toggle('text-danger', currentLength >= 100);
+        });
+
+        // Prévia de imagens com informações
+        imageUpload.addEventListener('change', function(e) {
+            imagePreview.innerHTML = '';
+            const files = Array.from(e.target.files).slice(0, MAX_IMAGES);
+            
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('preview-image', 'img-thumbnail');
+                    
+                    const imgInfo = document.createElement('div');
+                    imgInfo.classList.add('image-info', 'text-center');
+
+                    const image = new Image();
+                    image.src = e.target.result;
+                    image.onload = () => {
+                        imgInfo.textContent = `${image.width} x ${image.height}`;
+                    };
+
+                    const container = document.createElement('div');
+                    container.classList.add('text-center');
+                    container.appendChild(img);
+                    container.appendChild(imgInfo);
+                    
+                    imagePreview.appendChild(container);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Nova página
+        newPageBtn.addEventListener('click', function() {
+            const pageData = capturePage();
+            if (pageData) {
+                resetPageForm();
+                updatePagesList();
+            }
+        });
+
+        // Gerar PDF
+        generatePdfBtn.addEventListener('click', generatePDF);
+
+        function capturePage() {
+            const airlines = Array.from(document.querySelectorAll('input[name="airline"]:checked'))
+                .map(input => input.id);
+            const payments = Array.from(document.querySelectorAll('input[name="payment"]:checked'))
+                .map(input => input.id);
+            const description = descriptionTextarea.value.trim();
+            
+            const imageContainers = imagePreview.querySelectorAll(':scope > div');
+            const images = Array.from(imageContainers).map(container => {
+                const img = container.querySelector('img');
+                const imgInfo = container.querySelector('.image-info');
+                return {
+                    src: img.src,
+                    width: parseInt(imgInfo.textContent.split(' x ')[0]),
+                    height: parseInt(imgInfo.textContent.split(' x ')[1])
+                };
+            });
+
+            // Validação básica
+            if (airlines.length === 0 || payments.length === 0 || description === '') {
+                alert('Por favor, preencha todos os campos.');
+                return null;
+            }
+
+            const pageData = {
+                airlines,
+                payments,
+                description,
+                images
+            };
+            
+            pages.push(pageData);
+            return pageData;
+        }
+
+        function updatePagesList() {
+            pagesList.innerHTML = '';
+            pages.forEach((page, index) => {
+                const pageItem = document.createElement('div');
+                pageItem.classList.add('list-group-item');
+                pageItem.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Página ${index + 1}</h5>
+                        <button class="btn btn-sm btn-danger remove-page" data-index="${index}">
+                            Remover
+                        </button>
+                    </div>
+                    <p class="mb-1">
+                        <strong>Companhias:</strong> ${page.airlines.join(', ')}<br>
+                        <strong>Pagamentos:</strong> ${page.payments.join(', ')}<br>
+                        <strong>Descrição:</strong> ${page.description}
+                    </p>
+                `;
+                pagesList.appendChild(pageItem);
+            });
+
+            document.querySelectorAll('.remove-page').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    pages.splice(index, 1);
+                    updatePagesList();
+                });
+            });
+        }
+
+        function resetPageForm() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            descriptionTextarea.value = '';
+            charCountSpan.textContent = '0 / 100 caracteres';
+            imageUpload.value = '';
+            imagePreview.innerHTML = '';
+        }
+
+        function generatePDF() {
+            if (pages.length === 0) {
+                alert('Adicione pelo menos uma página.');
+                return;
+            }
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth() - 20;
+            const pageHeight = doc.internal.pageSize.getHeight() - 30;
+
+            function formatDateTime() {
+                const now = new Date();
+                const format = (n) => n.toString().padStart(2, '0');
+                return `relatorio_${now.getFullYear()}${format(now.getMonth()+1)}${format(now.getDate())}_${format(now.getHours())}${format(now.getMinutes())}.pdf`;
+            }
+
+            pages.forEach((page, pageIndex) => {
+                if (pageIndex > 0) doc.addPage();
+
+                let yOffset = 10;
+
+                // Título da Página
+                doc.setFontSize(16);
+                doc.text(`Página ${pageIndex + 1}`, 10, yOffset);
+                yOffset += 10;
+
+                // Companhias Aéreas
+                doc.setFontSize(12);
+                doc.text('Companhias Aéreas:', 10, yOffset);
+                yOffset += 7;
+                doc.setFontSize(10);
+                doc.text(page.airlines.join(', '), 10, yOffset);
+                yOffset += 10;
+
+                // Tipos de Pagamento
+                doc.setFontSize(12);
+                doc.text('Tipos de Pagamento:', 10, yOffset);
+                yOffset += 7;
+                doc.setFontSize(10);
+                doc.text(page.payments.join(', '), 10, yOffset);
+                yOffset += 10;
+
+                // Descrição
+                doc.setFontSize(12);
+                doc.text('Descrição:', 10, yOffset);
+                yOffset += 7;
+                doc.setFontSize(10);
+                doc.text(page.description, 10, yOffset);
+                yOffset += 10;
+
+                // Imagens com proporção original
+                page.images.forEach((img, imgIndex) => {
+                    const maxWidth = pageWidth;
+                    const maxHeight = pageHeight - yOffset;
+                    
+                    let drawWidth, drawHeight;
+                    if (img.width / img.height > maxWidth / maxHeight) {
+                        // Imagem mais larga que o espaço
+                        drawWidth = maxWidth;
+                        drawHeight = (img.height / img.width) * maxWidth;
+                    } else {
+                        // Imagem mais alta que o espaço
+                        drawHeight = maxHeight;
+                        drawWidth = (img.width / img.height) * maxHeight;
+                    }
+
+                    // Centralizar horizontalmente
+                    const xPosition = (pageWidth - drawWidth) / 2 + 10;
+
+                    doc.addImage(img.src, 'JPEG', xPosition, yOffset, drawWidth, drawHeight);
+                    yOffset += drawHeight + 10;
+                });
+            });
+
+            // Salvar PDF
+            doc.save(formatDateTime());
+
+            // Limpar dados
+            pages.length = 0;
+            resetPageForm();
+            updatePagesList();
+        }
+    </script>
 </body>
 </html>
