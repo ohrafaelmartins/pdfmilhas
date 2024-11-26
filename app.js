@@ -4,6 +4,10 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const pages = [];
 
+// Orientation checkbox logic
+const verticalCheckbox = document.getElementById('vertical');
+const horizontalCheckbox = document.getElementById('horizontal');
+
 // Elementos DOM
 const newPageBtn = document.getElementById('new-page-btn');
 const generatePdfBtn = document.getElementById('generate-pdf-btn');
@@ -287,10 +291,18 @@ function generatePDF() {
         return;
     }
 
+    const orientation = verticalCheckbox.checked ? 'p' : 'l';
+
     generatePdfBtn.disabled = true;
     generatePdfBtn.innerHTML = 'Gerando PDF...';
 
-    const doc = new jsPDF();
+    // Create PDF with selected orientation
+    const doc = new jsPDF({
+        orientation: orientation,
+        unit: 'mm',
+        format: 'a4'
+    });
+
     const pageWidth = doc.internal.pageSize.getWidth() - 20;
     const pageHeight = doc.internal.pageSize.getHeight() - 30;
 
@@ -369,6 +381,25 @@ newPageBtn.addEventListener('click', () => {
         showToast('Nova página adicionada');
         resetPageForm();
         updatePagesList();
+    }
+});
+
+// Ensure only one checkbox can be checked at a time
+verticalCheckbox.addEventListener('change', () => {
+    if (verticalCheckbox.checked) {
+        horizontalCheckbox.checked = false;
+    } else {
+        // Prevent unchecking both
+        horizontalCheckbox.checked = true;
+    }
+});
+
+horizontalCheckbox.addEventListener('change', () => {
+    if (horizontalCheckbox.checked) {
+        verticalCheckbox.checked = false;
+    } else {
+        // Prevent unchecking both
+        verticalCheckbox.checked = true;
     }
 });
 
