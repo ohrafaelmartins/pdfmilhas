@@ -1,23 +1,91 @@
-/* Estilos personalizados para o gerador de PDF */
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --text-color: #333;
+    --border-radius: 0.375rem;
+    --transition-speed: 0.3s;
+}
+
 body {
-    background-color: #f4f4f4;
+    font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+    background-color: #f4f6f9;
+    color: var(--text-color);
 }
 
-.container {
-    max-width: 800px;
-    margin: 0 auto;
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-color), #0056b3);
+}
+
+.btn-custom-toggle {
+    position: absolute;
+    opacity: 0;
+}
+
+.btn-custom-label {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    border: 2px solid #e0e4e8;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-speed) ease;
+    cursor: pointer;
     background-color: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    color: var(--text-color);
 }
 
-.dynamic-page {
-    background-color: #f9f9f9;
-    border-radius: 5px;
-    transition: all 0.3s ease;
+.btn-custom-toggle:checked+.btn-custom-label {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.dynamic-page:hover {
+.preview-container {
+    position: relative;
+    display: inline-block;
+    margin: 10px;
+}
+
+.remove-image {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.preview-image {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: var(--border-radius);
+}
+
+.image-info {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+    text-align: center;
+}
+
+.sortable-chosen {
     background-color: #f0f0f0;
+}
+
+.toast-container {
+    z-index: 1100;
 }
