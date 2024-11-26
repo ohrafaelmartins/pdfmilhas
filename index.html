@@ -1,53 +1,112 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gerador de PDF Dinâmico</title>
+    <title>Gerador de PDF - Passagens Aéreas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --text-color: #333;
+            --border-radius: 0.375rem;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+            background-color: #f4f6f9;
+            color: var(--text-color);
+        }
+
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), #0056b3);
+        }
+
         .btn-custom-toggle {
-            position: relative;
+            position: absolute;
             opacity: 0;
+        }
+
+        .btn-custom-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border: 2px solid #e0e4e8;
+            border-radius: var(--border-radius);
+            transition: all var(--transition-speed) ease;
+            cursor: pointer;
+            background-color: white;
+            color: var(--text-color);
+        }
+
+        .btn-custom-toggle:checked+.btn-custom-label {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+        }
+
+        .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
         }
-        .btn-custom-label {
-            display: inline-block;
-            padding: 0.375rem 0.75rem;
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
-            border: 1px solid #ced4da;
-            border-radius: 0.25rem;
-            transition: all 0.3s;
-        }
-        .btn-custom-toggle:checked + .btn-custom-label {
-            background-color: #007bff;
-            color: white;
-            border-color: #007bff;
-        }
+
         .preview-image {
             max-width: 200px;
             max-height: 200px;
-            margin: 10px;
             object-fit: contain;
+            border-radius: var(--border-radius);
         }
-        #image-preview {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+
         .image-info {
             font-size: 0.8em;
             color: #666;
             margin-top: 5px;
+            text-align: center;
+        }
+
+        .sortable-chosen {
+            background-color: #f0f0f0;
+        }
+
+        .toast-container {
+            z-index: 1100;
         }
     </style>
 </head>
+
 <body>
     <div class="container mt-5">
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h2 class="mb-0">Gerador de PDF Dinâmico</h2>
+                <h2 class="mb-0">Gerador de PDF - Passagens Aéreas</h2>
             </div>
             <div class="card-body" id="page-container">
                 <div class="row">
@@ -56,27 +115,27 @@
                         <div class="d-flex flex-wrap" id="airline-group">
                             <input type="checkbox" class="btn-custom-toggle" id="azul" name="airline">
                             <label class="btn-custom-label" for="azul">Azul</label>
-                            
+
                             <input type="checkbox" class="btn-custom-toggle" id="gol" name="airline">
                             <label class="btn-custom-label" for="gol">Gol</label>
-                            
+
                             <input type="checkbox" class="btn-custom-toggle" id="latam" name="airline">
                             <label class="btn-custom-label" for="latam">Latam</label>
-                            
+
                             <input type="checkbox" class="btn-custom-toggle" id="tap" name="airline">
                             <label class="btn-custom-label" for="tap">TAP</label>
-                            
+
                             <input type="checkbox" class="btn-custom-toggle" id="iberia" name="airline">
                             <label class="btn-custom-label" for="iberia">Iberia</label>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-6 mb-3">
                         <h4>Tipo de Pagamento</h4>
                         <div class="d-flex flex-wrap" id="payment-group">
                             <input type="checkbox" class="btn-custom-toggle" id="pontos" name="payment">
                             <label class="btn-custom-label" for="pontos">Pontos</label>
-                            
+
                             <input type="checkbox" class="btn-custom-toggle" id="dinheiro" name="payment">
                             <label class="btn-custom-label" for="dinheiro">Dinheiro</label>
                         </div>
@@ -86,13 +145,8 @@
                 <div class="row mb-3">
                     <div class="col-12">
                         <h4>Descrição</h4>
-                        <textarea 
-                            id="description" 
-                            class="form-control" 
-                            maxlength="100" 
-                            rows="3" 
-                            placeholder="Descrição (máximo 100 caracteres)"
-                        ></textarea>
+                        <textarea id="description" class="form-control" maxlength="100" rows="3"
+                            placeholder="Descrição (máximo 100 caracteres)"></textarea>
                         <small class="form-text text-muted" id="char-count">0 / 100 caracteres</small>
                     </div>
                 </div>
@@ -101,26 +155,20 @@
                     <div class="col-12">
                         <h4>Anexar Imagens</h4>
                         <div class="input-group">
-                            <input 
-                                type="file" 
-                                class="form-control" 
-                                id="image-upload" 
-                                accept="image/*" 
-                                multiple 
-                                max="2"
-                            >
+                            <input type="file" class="form-control" id="image-upload"
+                                accept="image/jpeg,image/png,image/webp" multiple max="2">
                         </div>
-                        <div id="image-preview" class="mt-2"></div>
+                        <div id="image-preview" class="mt-2 d-flex flex-wrap justify-content-center"></div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="card-footer">
                 <div class="d-flex justify-content-between">
-                    <button id="new-page-btn" class="btn btn-secondary">
+                    <button id="new-page-btn" class="btn btn-secondary" aria-label="Nova Página">
                         Nova Página
                     </button>
-                    <button id="generate-pdf-btn" class="btn btn-primary">
+                    <button id="generate-pdf-btn" class="btn btn-primary" aria-label="Gerar PDF">
                         Gerar PDF
                     </button>
                 </div>
@@ -132,13 +180,18 @@
         </div>
     </div>
 
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
     <script>
         const { jsPDF } = window.jspdf;
         const MAX_IMAGES = 2;
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+        const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
         const pages = [];
 
         // Elementos DOM
@@ -149,28 +202,94 @@
         const descriptionTextarea = document.getElementById('description');
         const charCountSpan = document.getElementById('char-count');
         const pagesList = document.getElementById('pages-list');
+        const toastContainer = document.getElementById('toast-container');
+
+        // Função de Toast
+        function showToast(message, type = 'success') {
+            const toastDiv = document.createElement('div');
+            toastDiv.classList.add('toast', 'align-items-center', 'text-white', 'bg-' + type, 'border-0');
+            toastDiv.setAttribute('role', 'alert');
+            toastDiv.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+
+            toastContainer.appendChild(toastDiv);
+            const toast = new bootstrap.Toast(toastDiv);
+            toast.show();
+
+            toastDiv.addEventListener('hidden.bs.toast', () => {
+                toastContainer.removeChild(toastDiv);
+            });
+        }
 
         // Contador de caracteres
-        descriptionTextarea.addEventListener('input', function() {
+        descriptionTextarea.addEventListener('input', function () {
             const currentLength = this.value.length;
             charCountSpan.textContent = `${currentLength} / 100 caracteres`;
             charCountSpan.classList.toggle('text-danger', currentLength >= 100);
         });
 
-        // Prévia de imagens com informações
-        imageUpload.addEventListener('change', function(e) {
+        // Validação de imagens
+        function validateImage(file) {
+            if (!ALLOWED_TYPES.includes(file.type)) {
+                showToast('Tipo de arquivo não permitido. Use JPEG, PNG ou WebP.', 'danger');
+                return false;
+            }
+
+            if (file.size > MAX_FILE_SIZE) {
+                showToast('Arquivo muito grande. Limite de 5MB.', 'danger');
+                return false;
+            }
+
+            return true;
+        }
+
+        // Atualizar file input após remoção de imagem
+        function updateFileInput() {
+            const dataTransfer = new DataTransfer();
+            imagePreview.querySelectorAll('img').forEach((img) => {
+                const originalFile = Array.from(imageUpload.files).find(file =>
+                    file.name === img.dataset.originalName
+                );
+                if (originalFile) {
+                    dataTransfer.items.add(originalFile);
+                }
+            });
+            imageUpload.files = dataTransfer.files;
+        }
+
+        // Prévia de imagens com informações e botão de remoção
+        imageUpload.addEventListener('change', function (e) {
             imagePreview.innerHTML = '';
-            const files = Array.from(e.target.files).slice(0, MAX_IMAGES);
-            
+            const files = Array.from(e.target.files)
+                .filter(validateImage)
+                .slice(0, MAX_IMAGES);
+
             files.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
+                    const container = document.createElement('div');
+                    container.classList.add('preview-container');
+
                     const img = document.createElement('img');
                     img.src = e.target.result;
-                    img.classList.add('preview-image', 'img-thumbnail');
-                    
+                    img.classList.add('preview-image', 'img-thumbnail', 'lazy');
+                    img.setAttribute('loading', 'lazy');
+                    img.dataset.originalName = file.name;
+
                     const imgInfo = document.createElement('div');
-                    imgInfo.classList.add('image-info', 'text-center');
+                    imgInfo.classList.add('image-info');
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.innerHTML = '✕';
+                    removeBtn.classList.add('remove-image', 'btn', 'btn-sm', 'btn-danger');
+                    removeBtn.addEventListener('click', () => {
+                        imagePreview.removeChild(container);
+                        updateFileInput();
+                    });
 
                     const image = new Image();
                     image.src = e.target.result;
@@ -178,37 +297,25 @@
                         imgInfo.textContent = `${image.width} x ${image.height}`;
                     };
 
-                    const container = document.createElement('div');
-                    container.classList.add('text-center');
+                    container.appendChild(removeBtn);
                     container.appendChild(img);
                     container.appendChild(imgInfo);
-                    
+
                     imagePreview.appendChild(container);
                 };
                 reader.readAsDataURL(file);
             });
         });
 
-        // Nova página
-        newPageBtn.addEventListener('click', function() {
-            const pageData = capturePage();
-            if (pageData) {
-                resetPageForm();
-                updatePagesList();
-            }
-        });
-
-        // Gerar PDF
-        generatePdfBtn.addEventListener('click', generatePDF);
-
+        // Capturar página
         function capturePage() {
             const airlines = Array.from(document.querySelectorAll('input[name="airline"]:checked'))
                 .map(input => input.id);
             const payments = Array.from(document.querySelectorAll('input[name="payment"]:checked'))
                 .map(input => input.id);
             const description = descriptionTextarea.value.trim();
-            
-            const imageContainers = imagePreview.querySelectorAll(':scope > div');
+
+            const imageContainers = imagePreview.querySelectorAll('.preview-container');
             const images = Array.from(imageContainers).map(container => {
                 const img = container.querySelector('img');
                 const imgInfo = container.querySelector('.image-info');
@@ -220,8 +327,8 @@
             });
 
             // Validação básica
-            if (airlines.length === 0 || payments.length === 0 || description === '') {
-                alert('Por favor, preencha todos os campos.');
+            if (airlines.length === 0 || payments.length === 0) {
+                showToast('Preencha todos os campos', 'warning');
                 return null;
             }
 
@@ -231,22 +338,89 @@
                 description,
                 images
             };
-            
+
             pages.push(pageData);
             return pageData;
         }
 
+        // Função para popular o formulário com dados de página existente para edição
+        function editPage(index) {
+            const page = pages[index];
+
+            // Redefinir formulário atual
+            document.querySelectorAll('input[name="airline"], input[name="payment"]').forEach(input => {
+                input.checked = false;
+            });
+
+            // Restaurar companhias aéreas
+            page.airlines.forEach(airline => {
+                const checkbox = document.getElementById(airline);
+                if (checkbox) checkbox.checked = true;
+            });
+
+            // Restaurar pagamentos
+            page.payments.forEach(payment => {
+                const checkbox = document.getElementById(payment);
+                if (checkbox) checkbox.checked = true;
+            });
+
+            // Restaurar descrição
+            descriptionTextarea.value = page.description;
+            charCountSpan.textContent = `${page.description.length} / 100 caracteres`;
+
+            // Restaurar imagens
+            imagePreview.innerHTML = '';
+            page.images.forEach(img => {
+                const container = document.createElement('div');
+                container.classList.add('preview-container');
+
+                const imgElement = document.createElement('img');
+                imgElement.src = img.src;
+                imgElement.classList.add('preview-image', 'img-thumbnail', 'lazy');
+                imgElement.setAttribute('loading', 'lazy');
+
+                const imgInfo = document.createElement('div');
+                imgInfo.classList.add('image-info');
+                imgInfo.textContent = `${img.width} x ${img.height}`;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '✕';
+                removeBtn.classList.add('remove-image', 'btn', 'btn-sm', 'btn-danger');
+                removeBtn.addEventListener('click', () => {
+                    imagePreview.removeChild(container);
+                    updateFileInput();
+                });
+
+                container.appendChild(removeBtn);
+                container.appendChild(imgElement);
+                container.appendChild(imgInfo);
+
+                imagePreview.appendChild(container);
+            });
+
+            // Remove a página da lista (será atualizada ou recriada)
+            pages.splice(index, 1);
+            updatePagesList();
+        }
+
+        // Atualizar lista de páginas
         function updatePagesList() {
             pagesList.innerHTML = '';
             pages.forEach((page, index) => {
                 const pageItem = document.createElement('div');
                 pageItem.classList.add('list-group-item');
+                pageItem.dataset.index = index;
                 pageItem.innerHTML = `
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">Página ${index + 1}</h5>
-                        <button class="btn btn-sm btn-danger remove-page" data-index="${index}">
-                            Remover
-                        </button>
+                        <div>
+                            <button class="btn btn-sm btn-primary edit-page me-2" data-index="${index}">
+                                Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger remove-page" data-index="${index}">
+                                Remover
+                            </button>
+                        </div>
                     </div>
                     <p class="mb-1">
                         <strong>Companhias:</strong> ${page.airlines.join(', ')}<br>
@@ -257,15 +431,37 @@
                 pagesList.appendChild(pageItem);
             });
 
+            // Ouvintes de eventos para remoção de página
             document.querySelectorAll('.remove-page').forEach(btn => {
-                btn.addEventListener('click', function() {
+                btn.addEventListener('click', function () {
                     const index = this.getAttribute('data-index');
                     pages.splice(index, 1);
                     updatePagesList();
+                    showToast('Página removida');
+                });
+            });
+
+            // Ouvintes de eventos para edição de página
+            document.querySelectorAll('.edit-page').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const index = this.getAttribute('data-index');
+                    editPage(index);
+                    showToast('Edição da página iniciada');
                 });
             });
         }
 
+        // Inicializar Sortable.js para reordenação de páginas
+        new Sortable(pagesList, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function (evt) {
+                const movedItem = pages.splice(evt.oldIndex, 1)[0];
+                pages.splice(evt.newIndex, 0, movedItem);
+            }
+        });
+
+        // Resetar formulário
         function resetPageForm() {
             document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
             descriptionTextarea.value = '';
@@ -274,11 +470,15 @@
             imagePreview.innerHTML = '';
         }
 
+        // Gerar PDF
         function generatePDF() {
             if (pages.length === 0) {
-                alert('Adicione pelo menos uma página.');
+                showToast('Adicione pelo menos uma página', 'warning');
                 return;
             }
+
+            generatePdfBtn.disabled = true;
+            generatePdfBtn.innerHTML = 'Gerando PDF...';
 
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.getWidth() - 20;
@@ -287,75 +487,83 @@
             function formatDateTime() {
                 const now = new Date();
                 const format = (n) => n.toString().padStart(2, '0');
-                return `relatorio_${now.getFullYear()}${format(now.getMonth()+1)}${format(now.getDate())}_${format(now.getHours())}${format(now.getMinutes())}.pdf`;
+                return `relatorio_${now.getFullYear()}${format(now.getMonth() + 1)}${format(now.getDate())}_${format(now.getHours())}${format(now.getMinutes())}.pdf`;
             }
 
-            pages.forEach((page, pageIndex) => {
-                if (pageIndex > 0) doc.addPage();
+            try {
+                pages.forEach((page, pageIndex) => {
+                    if (pageIndex > 0) doc.addPage();
 
-                let yOffset = 10;
+                    let yOffset = 10;
+                    // Companhias Aéreas
+                    doc.setFontSize(12);
+                    doc.text('Companhias Aéreas:', 10, yOffset);
+                    yOffset += 7;
+                    doc.text(page.airlines.join(', '), 10, yOffset);
+                    yOffset += 10;
 
-                // Título da Página
-                doc.setFontSize(16);
-                doc.text(`Página ${pageIndex + 1}`, 10, yOffset);
-                yOffset += 10;
+                    // Tipos de Pagamento
+                    doc.setFontSize(12);
+                    doc.text('Tipos de Pagamento:', 10, yOffset);
+                    yOffset += 7;
+                    doc.text(page.payments.join(', '), 10, yOffset);
+                    yOffset += 10;
 
-                // Companhias Aéreas
-                doc.setFontSize(12);
-                doc.text('Companhias Aéreas:', 10, yOffset);
-                yOffset += 7;
-                doc.setFontSize(10);
-                doc.text(page.airlines.join(', '), 10, yOffset);
-                yOffset += 10;
+                    // Descrição
+                    doc.setFontSize(12);
+                    doc.text('Descrição:', 10, yOffset);
+                    yOffset += 7;
+                    doc.text(page.description, 10, yOffset);
+                    yOffset += 10;
 
-                // Tipos de Pagamento
-                doc.setFontSize(12);
-                doc.text('Tipos de Pagamento:', 10, yOffset);
-                yOffset += 7;
-                doc.setFontSize(10);
-                doc.text(page.payments.join(', '), 10, yOffset);
-                yOffset += 10;
+                    // Imagens com proporção original
+                    page.images.forEach((img, imgIndex) => {
+                        const maxWidth = pageWidth;
+                        const maxHeight = pageHeight - yOffset;
 
-                // Descrição
-                doc.setFontSize(12);
-                doc.text('Descrição:', 10, yOffset);
-                yOffset += 7;
-                doc.setFontSize(10);
-                doc.text(page.description, 10, yOffset);
-                yOffset += 10;
+                        let drawWidth, drawHeight;
+                        if (img.width / img.height > maxWidth / maxHeight) {
+                            // Imagem mais larga que o espaço
+                            drawWidth = maxWidth;
+                            drawHeight = (img.height / img.width) * maxWidth;
+                        } else {
+                            // Imagem mais alta que o espaço
+                            drawHeight = maxHeight;
+                            drawWidth = (img.width / img.height) * maxHeight;
+                        }
 
-                // Imagens com proporção original
-                page.images.forEach((img, imgIndex) => {
-                    const maxWidth = pageWidth;
-                    const maxHeight = pageHeight - yOffset;
-                    
-                    let drawWidth, drawHeight;
-                    if (img.width / img.height > maxWidth / maxHeight) {
-                        // Imagem mais larga que o espaço
-                        drawWidth = maxWidth;
-                        drawHeight = (img.height / img.width) * maxWidth;
-                    } else {
-                        // Imagem mais alta que o espaço
-                        drawHeight = maxHeight;
-                        drawWidth = (img.width / img.height) * maxHeight;
-                    }
+                        // Centralizar horizontalmente
+                        const xPosition = (pageWidth - drawWidth) / 2 + 10;
 
-                    // Centralizar horizontalmente
-                    const xPosition = (pageWidth - drawWidth) / 2 + 10;
-
-                    doc.addImage(img.src, 'JPEG', xPosition, yOffset, drawWidth, drawHeight);
-                    yOffset += drawHeight + 10;
+                        doc.addImage(img.src, 'JPEG', xPosition, yOffset, drawWidth, drawHeight);
+                        yOffset += drawHeight + 10;
+                    });
                 });
-            });
 
-            // Salvar PDF
-            doc.save(formatDateTime());
-
-            // Limpar dados
-            pages.length = 0;
-            resetPageForm();
-            updatePagesList();
+                // Salvar PDF
+                doc.save(formatDateTime());
+                showToast('PDF gerado com sucesso!');
+            } catch (error) {
+                showToast('Erro ao gerar PDF', 'danger');
+                console.error(error);
+            } finally {
+                generatePdfBtn.disabled = false;
+                generatePdfBtn.innerHTML = 'Gerar PDF';
+            }
         }
+
+        // Eventos
+        newPageBtn.addEventListener('click', () => {
+            const pageData = capturePage();
+            if (pageData) {
+                showToast('Nova página adicionada');
+                resetPageForm();
+                updatePagesList();
+            }
+        });
+
+        generatePdfBtn.addEventListener('click', generatePDF);
     </script>
 </body>
+
 </html>
